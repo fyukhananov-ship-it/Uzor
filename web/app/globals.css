@@ -2,8 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Базовые типографические правила.
-   Шрифты подгружены через next/font в layout.tsx — здесь только стили. */
+/* PRD §12 — литературное направление, без бомбастики.
+   Тёплая бумага вместо плоского off-white, сдержанная типографика,
+   честный motion ≤280ms. Шрифты подгружены через next/font в layout.tsx. */
 @layer base {
   :root {
     color-scheme: light dark;
@@ -17,27 +18,67 @@
 
   body {
     @apply bg-canvas text-ink font-sans;
+    /* Paper-grain: три тёплых пятна из палитры на 3–4% — фон перестаёт
+       быть «ровным» и приобретает тонкую глубину, без текстурной картинки. */
+    background-image:
+      radial-gradient(
+        ellipse 60% 40% at 18% 12%,
+        rgba(201, 154, 142, 0.05) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 55% 45% at 82% 58%,
+        rgba(138, 166, 159, 0.045) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 50% 35% at 42% 92%,
+        rgba(111, 138, 163, 0.035) 0%,
+        transparent 60%
+      );
+    background-attachment: fixed;
+    /* Tabular figures для дат, чисел нумерологии — выравнивание по колонкам. */
+    font-feature-settings: "ss01", "cv11";
   }
 
   @media (prefers-color-scheme: dark) {
     body {
       @apply bg-canvas-ink text-canvas;
+      background-image:
+        radial-gradient(
+          ellipse 60% 40% at 18% 12%,
+          rgba(201, 154, 142, 0.07) 0%,
+          transparent 60%
+        ),
+        radial-gradient(
+          ellipse 55% 45% at 82% 58%,
+          rgba(138, 166, 159, 0.06) 0%,
+          transparent 60%
+        ),
+        radial-gradient(
+          ellipse 50% 35% at 42% 92%,
+          rgba(111, 138, 163, 0.05) 0%,
+          transparent 60%
+        );
     }
   }
 
-  /* Заголовки — серифом, как в литературных изданиях. */
   h1, h2, h3 {
     @apply font-serif;
-    font-feature-settings: "ss01", "ss02";
+    /* Style sets для серифа — чуть более литературные формы знаков. */
+    font-feature-settings: "ss01", "ss02", "ss05";
   }
 
-  /* Заметные ссылки — без подчёркивания по умолчанию,
-     подчеркиваем на :hover/:focus. */
+  /* Italic-акценты в заголовках — не курсив-всё-подряд, а одно слово. */
+  h1 em, h2 em {
+    font-style: italic;
+    font-weight: 400;
+  }
+
   a {
     @apply transition-colors duration-200 ease-out-soft;
   }
 
-  /* Контролы получают видимый focus-ring без agressive-стиля. */
   :focus-visible {
     @apply outline-none ring-2 ring-sky/50 ring-offset-2 ring-offset-canvas;
   }
@@ -71,5 +112,64 @@
            text-ink placeholder:text-ink-faint
            transition-colors duration-200 ease-out-soft
            focus:border-ink focus:bg-canvas;
+  }
+
+  /* Кикер — small-caps аналог через uppercase + tracking,
+     работает универсально (Inter `smcp` есть, но не на каждой системе). */
+  .kicker {
+    @apply text-xs uppercase tracking-[0.22em];
+    font-feature-settings: "tnum";
+  }
+
+  /* Тонкий горизонтальный рул — для редакторских разделителей. */
+  .rule {
+    @apply block h-px bg-current opacity-30;
+  }
+
+  /* Тонкая декоративная линия — у hero-кикера, как печатный знак раздела. */
+  .ornament-line {
+    @apply inline-block w-10 h-px bg-current align-middle;
+  }
+}
+
+@layer utilities {
+  /* Honest motion — fade + крошечный подъём. PRD §12.6: только on-purpose,
+     не bouncing/spring. ≤280ms, ease-out-soft. */
+  @keyframes uzor-settle {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .motion-settle {
+    animation: uzor-settle 280ms cubic-bezier(0.16, 0.84, 0.3, 1) backwards;
+  }
+
+  .delay-0 {
+    animation-delay: 0ms;
+  }
+  .delay-80 {
+    animation-delay: 80ms;
+  }
+  .delay-160 {
+    animation-delay: 160ms;
+  }
+  .delay-240 {
+    animation-delay: 240ms;
+  }
+  .delay-320 {
+    animation-delay: 320ms;
+  }
+
+  /* Уважение к пользовательской настройке reduced-motion. */
+  @media (prefers-reduced-motion: reduce) {
+    .motion-settle {
+      animation: none;
+    }
   }
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BirthDateInput } from "@/components/BirthDateInput";
 import { LoadingSequence } from "@/components/LoadingSequence";
 import { ObservationCard } from "@/components/ObservationCard";
+import { TransparencyStrip } from "@/components/TransparencyStrip";
 import { sessionRequestSchema } from "@/lib/validation";
 import type { SessionPayload } from "@/types";
 
@@ -68,8 +69,13 @@ export default function StartPage() {
     }
   }
 
+  // Узкая колонка для шагов формы (фокус на одном поле), широкая —
+  // для редакторского спреда результата (наблюдения дышат).
+  const containerClass =
+    step === "result" ? "container-prose" : "container-narrow";
+
   return (
-    <div className="container-narrow py-16 sm:py-24">
+    <div className={`${containerClass} py-16 sm:py-24`}>
       {step === "user" && (
         <section>
           <p className="text-sm text-ink-faint mb-4">Шаг 1 из 2</p>
@@ -155,20 +161,34 @@ function ResultView({
 }) {
   return (
     <section>
-      <p className="text-sm text-ink-faint mb-4">Готово</p>
-      <h1 className="font-serif text-subdisplay">Три коротких наблюдения</h1>
-      <p className="mt-3 text-body text-ink-muted">
+      <div className="motion-settle delay-0 mb-6 flex items-center gap-3 text-rose">
+        <span aria-hidden className="ornament-line" />
+        <span className="kicker">Готово · Разбор пары</span>
+      </div>
+
+      <h1 className="motion-settle delay-80 font-serif text-subdisplay">
+        Три наблюдения о вас <em>двоих</em>
+      </h1>
+
+      <p className="motion-settle delay-160 mt-4 text-body text-ink-muted max-w-prose">
         Это рамка для разговора, не диагноз. Каждое наблюдение — повод
-        присмотреться, не повод что-то менять.
+        присмотреться, не&nbsp;повод что-то менять.
       </p>
 
-      <div className="mt-8 grid gap-4">
-        {session.observations.map((o) => (
-          <ObservationCard key={o.kind} observation={o} />
+      <div className="mt-12">
+        {session.observations.map((o, i) => (
+          <ObservationCard
+            key={o.kind}
+            observation={o}
+            index={i}
+            isLast={i === session.observations.length - 1}
+          />
         ))}
       </div>
 
-      <div className="mt-10 flex flex-col gap-3">
+      <TransparencyStrip context={session.context} />
+
+      <div className="motion-settle delay-320 mt-12 flex flex-col gap-3">
         {/* PRD §6.1: первичная CTA — установка приложения через RuStore deep-link.
             До запуска приложения это плейсхолдер на /pricing. */}
         <a href="/pricing" className="btn-primary">
@@ -179,7 +199,7 @@ function ResultView({
         </button>
       </div>
 
-      <p className="mt-8 text-sm text-ink-faint">
+      <p className="motion-settle delay-320 mt-8 text-sm text-ink-faint">
         Расчёт построен на двух датах, которые ты ввёл. Никаких имён,
         никаких уведомлений партнёру.
       </p>

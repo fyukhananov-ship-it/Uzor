@@ -25,30 +25,37 @@ export function LoadingSequence({ onDone }: { onDone?: () => void }) {
   }, [step, onDone]);
 
   return (
-    <ol className="space-y-3" aria-live="polite">
+    <ol className="space-y-4" aria-live="polite">
       {STEPS.map((label, i) => {
-        const state =
-          i < step ? "done" : i === step ? "active" : "pending";
+        const state = i < step ? "done" : i === step ? "active" : "pending";
         return (
           <li
             key={label}
             className={
-              "flex items-center gap-3 text-body transition-opacity duration-200 " +
-              (state === "pending" ? "opacity-30" : "opacity-100")
+              "flex items-baseline gap-4 transition-opacity duration-200 ease-out-soft " +
+              (state === "pending" ? "opacity-25" : "opacity-100")
             }
           >
+            <span className="kicker tabular-nums text-ink-faint w-6">
+              {String(i + 1).padStart(2, "0")}
+            </span>
             <span
               aria-hidden
               className={
-                "w-2 h-2 rounded-full transition-colors duration-200 " +
+                "block h-px transition-all duration-200 ease-out-soft " +
                 (state === "done"
-                  ? "bg-ink"
+                  ? "w-10 bg-ink"
                   : state === "active"
-                  ? "bg-sage animate-pulse"
-                  : "bg-line")
+                  ? "w-10 bg-sage animate-pulse"
+                  : "w-6 bg-line")
               }
             />
-            <span className={state === "done" ? "text-ink" : "text-ink-muted"}>
+            <span
+              className={
+                "font-serif text-lead " +
+                (state === "done" ? "text-ink" : "text-ink-muted")
+              }
+            >
               {label}
             </span>
           </li>

@@ -52,8 +52,11 @@ const config: Config = {
         // Generous line-height per PRD: 1.5–1.7
         "body": ["1rem", { lineHeight: "1.65" }],
         "lead": ["1.125rem", { lineHeight: "1.6" }],
+        "deck": ["1.25rem", { lineHeight: "1.55" }],
         "display": ["clamp(2rem, 5vw, 3.5rem)", { lineHeight: "1.15", letterSpacing: "-0.01em" }],
+        "display-large": ["clamp(2.5rem, 6.5vw, 5rem)", { lineHeight: "1.05", letterSpacing: "-0.02em" }],
         "subdisplay": ["clamp(1.25rem, 3vw, 1.75rem)", { lineHeight: "1.35" }],
+        "observation": ["clamp(1.25rem, 2.4vw, 1.6rem)", { lineHeight: "1.4", letterSpacing: "-0.005em" }],
       },
       transitionTimingFunction: {
         // Сгенерирует utility-класс `ease-out-soft` (Tailwind префиксует ключ через `ease-`).

@@ -2,11 +2,15 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/session-store";
 import { ObservationCard } from "@/components/ObservationCard";
+import { TransparencyStrip } from "@/components/TransparencyStrip";
 import { ShareActions } from "./share-actions";
 
 // Shared compatibility page (PRD §6.3, §3.3).
 // Главное правило: партнёр, открывший ссылку, видит сразу разбор —
 // никаких «установите приложение» сверху. Иначе вкладка закрывается.
+// Та же редакторская подача, что и на /start: kicker → display-serif →
+// transparency strip, чтобы партнёр получил ровно тот же артефакт,
+// что отправил основной пользователь.
 
 export async function generateMetadata({
   params,
@@ -40,33 +44,48 @@ export default async function SharedPairPage({
   }
 
   return (
-    <div className="container-prose py-12 sm:py-16">
-      <p className="text-sm text-ink-faint mb-3">Разбор пары</p>
-      <h1 className="font-serif text-subdisplay">
-        Что заметила нумерология о вас двоих
+    <div className="container-prose py-16 sm:py-24">
+      <div className="motion-settle delay-0 mb-6 flex items-center gap-3 text-rose">
+        <span aria-hidden className="ornament-line" />
+        <span className="kicker">Разбор пары · Узор</span>
+      </div>
+
+      <h1 className="motion-settle delay-80 font-serif text-subdisplay">
+        Что заметила нумерология о&nbsp;вас <em>двоих</em>
       </h1>
-      <p className="mt-3 text-body text-ink-muted">
+
+      <p className="motion-settle delay-160 mt-4 text-body text-ink-muted max-w-prose">
         Это не предсказание и не диагноз. Это короткое наблюдение,
-        собранное по двум датам рождения.
+        собранное по&nbsp;двум датам рождения.
       </p>
 
-      <div className="mt-8 grid gap-4">
-        {session.observations.map((o) => (
-          <ObservationCard key={o.kind} observation={o} />
+      <div className="mt-12">
+        {session.observations.map((o, i) => (
+          <ObservationCard
+            key={o.kind}
+            observation={o}
+            index={i}
+            isLast={i === session.observations.length - 1}
+          />
         ))}
       </div>
 
-      <hr className="border-line/60 my-12" />
+      <TransparencyStrip context={session.context} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <h2 className="font-serif text-lg">Хочешь посмотреть со своей стороны?</h2>
+      <hr className="border-line/60 my-16" />
+
+      <div className="grid gap-8 sm:grid-cols-5 items-start">
+        <div className="sm:col-span-3">
+          <p className="kicker text-sage mb-3">Дальше</p>
+          <h2 className="font-serif text-lg">
+            Хочешь посмотреть со&nbsp;своей стороны?
+          </h2>
           <p className="mt-3 text-body text-ink-muted">
-            В приложении у каждого появляется собственный угол зрения.
-            Никаких уведомлений партнёру без согласия.
+            В&nbsp;приложении у&nbsp;каждого появляется собственный угол
+            зрения. Никаких уведомлений партнёру без согласия.
           </p>
         </div>
-        <div className="flex flex-col gap-3 self-end">
+        <div className="sm:col-span-2 flex flex-col gap-3">
           <a href="/pricing" className="btn-primary">
             Установить приложение
           </a>
