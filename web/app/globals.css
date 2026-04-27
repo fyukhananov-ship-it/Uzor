@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Базовые типографические правила.
+   Шрифты подгружены через next/font в layout.tsx — здесь только стили. */
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      @apply bg-canvas-ink text-canvas;
+    }
+  }
+
+  /* Заголовки — серифом, как в литературных изданиях. */
+  h1, h2, h3 {
+    @apply font-serif;
+    font-feature-settings: "ss01", "ss02";
+  }
+
+  /* Заметные ссылки — без подчёркивания по умолчанию,
+     подчеркиваем на :hover/:focus. */
+  a {
+    @apply transition-colors duration-200 ease-out-soft;
+  }
+
+  /* Контролы получают видимый focus-ring без agressive-стиля. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-sky/50 ring-offset-2 ring-offset-canvas;
+  }
+}
+
+@layer components {
+  .container-prose {
+    @apply mx-auto px-6 max-w-prose;
+  }
+
+  .container-narrow {
+    @apply mx-auto px-6 max-w-narrow;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3
+           bg-ink text-canvas rounded-md
+           transition-colors duration-200 ease-out-soft
+           hover:bg-ink-muted disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3
+           border border-line rounded-md text-ink
+           transition-colors duration-200 ease-out-soft
+           hover:bg-line/40 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-transparent border border-line rounded-md
+           text-ink placeholder:text-ink-faint
+           transition-colors duration-200 ease-out-soft
+           focus:border-ink focus:bg-canvas;
+  }
+}

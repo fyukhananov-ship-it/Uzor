@@ -1,0 +1,20 @@
+# Зависимости и сборки на уровне всего монорепо
+node_modules/
+.next/
+dist/
+build/
+out/
+
+# Локальные секреты
+.env
+.env.local
+.env.*.local
+
+# Редакторы и системы
+.DS_Store
+.idea/
+.vscode/
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
