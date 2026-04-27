@@ -1,12 +1,24 @@
 import { NextResponse } from "next/server";
 import { sessionRequestSchema } from "@/lib/validation";
 import { pairContextOf } from "@/lib/numerology";
-import { buildObservations } from "@/lib/observations";
+import { generateObservations } from "@/lib/llm";
 import { createSession } from "@/lib/session-store";
+import { checkRateLimit, rateLimitKeyFromRequest } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+// LLM-вызов с adaptive thinking может занять до ~6 сек (см. PRD §13.2).
+// Просим Vercel/прод-окружение не убивать функцию преждевременно.
+export const maxDuration = 30;
 
 export async function POST(request: Request) {
+  const rl = checkRateLimit(rateLimitKeyFromRequest(request));
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited", retryAfter: rl.retryAfterSeconds },
+      { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } },
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -24,7 +36,11 @@ export async function POST(request: Request) {
 
   const { birthDateUser, birthDatePartner } = parsed.data;
   const context = pairContextOf(birthDateUser, birthDatePartner);
-  const observations = buildObservations(birthDateUser, birthDatePartner, context);
+  const { observations } = await generateObservations(
+    birthDateUser,
+    birthDatePartner,
+    context,
+  );
 
   const session = createSession({
     birthDateUser,

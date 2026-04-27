@@ -17,9 +17,12 @@
 - **next/font** — Inter для UI и Source Serif 4 для контента (PRD §12.4).
 - **zod** для валидации (включая backend-эндпойнты).
 - Анонимные сессии — in-memory map (заглушка). На проде — Redis с TTL 7 дней.
-- LLM — заглушен детерминированным шаблонным генератором (`lib/observations.ts`).
-  Когда появится backend, лендинг будет проксировать запрос в `POST /session`
-  на FastAPI; стек шаблонов остаётся как fallback.
+- **LLM**: Anthropic Messages API, модель `claude-opus-4-7` (`UZOR_LLM_MODEL`
+  переопределяет). Adaptive thinking + `effort: high`, prompt caching на
+  системном промпте, structured outputs через JSON-Schema + Zod-валидация.
+  Если ключ не задан или вызов падает — graceful fallback на детерминированный
+  шаблонный генератор (`lib/observations.ts`); лендинг никогда не возвращает
+  500 из-за LLM. Per-IP rate limit на `/api/session` (8 / час).
 
 ## Запуск локально
 
@@ -61,9 +64,15 @@ components/
 
 lib/
   numerology.ts           # детерминированный движок (PRD §10.4)
-  observations.ts         # шаблонный генератор наблюдений
+  observations.ts         # шаблонный генератор наблюдений (fallback)
   session-store.ts        # in-memory store (заглушка для Redis)
   validation.ts           # zod-схемы
+  rate-limit.ts           # per-IP rate limiter (PRD §13.6)
+  llm/
+    claude.ts             # Anthropic SDK: системный промпт §10.3,
+                          # adaptive thinking, prompt caching, JSON-Schema
+    index.ts              # unified интерфейс: Claude → fallback → template
+    log.ts                # AIGenerationLog stub (PRD §10.7 / §14.6)
 
 types/
   index.ts                # SessionPayload, NumerologyContext, FrictionZone
@@ -72,9 +81,13 @@ types/
 ## Что осталось как TODO
 
 - [ ] Подключить backend FastAPI: проксировать `POST /api/session`
-      в `POST /session` на backend, использовать Redis вместо in-memory store.
-- [ ] Реальный LLM-провайдер (OpenRouter primary + YandexGPT резерв,
-      PRD §13.2). Текущий шаблонный генератор остаётся как fallback.
+      в `POST /session` на backend, использовать Redis вместо in-memory store
+      и Redis-bound rate limiter вместо in-memory.
+- [ ] Из РФ — переключить Anthropic на OpenRouter proxy (PRD §13.2):
+      Anthropic API недоступен по российским IP. Текущая реализация работает
+      из нероссийских окружений напрямую, либо через VPN-egress на стороне
+      хостинга. Минимальная правка — поменять `baseURL` у клиента.
+- [ ] YandexGPT 4 Pro как secondary fallback перед template_fallback (PRD §13.2).
 - [ ] OG-image generation на Edge runtime через `@vercel/og` (PRD §13.4).
 - [ ] Email-провайдер для листа ожидания (Unisender / SendPulse).
 - [ ] RuStore deep-link на CTA «Продолжить 7 дней бесплатно» —
@@ -82,6 +95,20 @@ types/
 - [ ] Аналитика (PostHog + Simple Analytics, PRD §13.1).
 - [ ] Cookie consent gate (152-ФЗ).
 - [ ] Финальные тексты политики и условий — после юр-консультации.
+
+## Стоимость LLM
+
+Один вызов Claude Opus 4.7 c adaptive thinking и системным промптом ~700
+токенов:
+
+- **Первый запрос**: ~$0.04–$0.06 (input + cache write + thinking + output)
+- **Последующие при попадании в кэш системного промпта** (5 мин TTL):
+  ~$0.02–$0.04
+
+Для cost-sensitive продакшна имеет смысл переключиться на Sonnet 4.6
+(`UZOR_LLM_MODEL=claude-sonnet-4-6`) — ~×3 дешевле, потеря качества тона в
+этом конкретном пайплайне ограниченная (PRD §3.2.8 говорит о чувствительности
+под-персоны B; нужен A/B-тест на ≥1k реальных запросов перед фиксацией модели).
 
 ## Тон
 
