@@ -5,10 +5,24 @@ dist/
 build/
 out/
 
+# Python venv и cache
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
 # Локальные секреты
 .env
 .env.local
 .env.*.local
+
+# Локальные SQLite (smoke-test)
+*.db
+*.sqlite
 
 # Редакторы и системы
 .DS_Store
