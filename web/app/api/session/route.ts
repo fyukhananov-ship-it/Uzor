@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { sessionRequestSchema } from "@/lib/validation";
-import { pairContextOf } from "@/lib/numerology";
-import { generateObservations } from "@/lib/llm";
-import { createSession } from "@/lib/session-store";
+import { createSession, BackendError } from "@/lib/backend";
 import { checkRateLimit, rateLimitKeyFromRequest } from "@/lib/rate-limit";
 
+// PRD §13.1: лендинг — тонкий проксирующий слой над backend FastAPI.
+// Этот route делает три вещи и больше ничего:
+//   1. Edge rate-limit per-IP (защита от cost runaway на стороне backend).
+//   2. Быстрая zod-валидация дат (короткое замыкание без сетевого вызова).
+//   3. Проброс в backend POST /session, прозрачный возврат ответа.
+
 export const runtime = "nodejs";
-// LLM-вызов с adaptive thinking может занять до ~6 сек (см. PRD §13.2).
-// Просим Vercel/прод-окружение не убивать функцию преждевременно.
+// Backend сам ограничен 8 сек на LLM + сеть; +4 сек запаса.
 export const maxDuration = 30;
 
 export async function POST(request: Request) {
@@ -34,20 +37,31 @@ export async function POST(request: Request) {
     );
   }
 
-  const { birthDateUser, birthDatePartner } = parsed.data;
-  const context = pairContextOf(birthDateUser, birthDatePartner);
-  const { observations } = await generateObservations(
-    birthDateUser,
-    birthDatePartner,
-    context,
+  try {
+    const session = await createSession(parsed.data);
+    return NextResponse.json(session, { status: 201 });
+  } catch (e) {
+    return handleBackendError(e);
+  }
+}
+
+/** Локализованный fallback для типичных backend-ошибок. UI показывает
+ *  обобщённое сообщение, в логе остаётся точная причина. */
+function handleBackendError(e: unknown): Response {
+  if (e instanceof BackendError) {
+    if (e.status >= 400 && e.status < 500) {
+      // Ретранслируем валидационные ошибки backend почти как есть.
+      return new Response(e.bodyText || JSON.stringify({ error: "backend_rejected" }), {
+        status: e.status,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    console.error("[backend] 5xx response:", e.status, e.bodyText.slice(0, 500));
+  } else {
+    console.error("[backend] unreachable or timed out:", e);
+  }
+  return NextResponse.json(
+    { error: "backend_unavailable" },
+    { status: 503 },
   );
-
-  const session = createSession({
-    birthDateUser,
-    birthDatePartner,
-    observations,
-    context,
-  });
-
-  return NextResponse.json(session, { status: 201 });
 }

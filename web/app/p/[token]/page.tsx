@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getSession } from "@/lib/session-store";
+import { getSession } from "@/lib/backend";
 import { ObservationCard } from "@/components/ObservationCard";
 import { TransparencyStrip } from "@/components/TransparencyStrip";
 import { ShareActions } from "./share-actions";
@@ -18,7 +18,9 @@ export async function generateMetadata({
   params: Promise<{ token: string }>;
 }): Promise<Metadata> {
   const { token } = await params;
-  const session = getSession(token);
+  // Если backend недоступен на этапе пререндера — отдаём пустые meta,
+  // основной flow всё равно покажет 404 ниже в SharedPairPage.
+  const session = await getSession(token).catch(() => null);
   if (!session) return {};
   const first = session.observations[0]?.text ?? "";
   return {
@@ -38,7 +40,7 @@ export default async function SharedPairPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     notFound();
   }

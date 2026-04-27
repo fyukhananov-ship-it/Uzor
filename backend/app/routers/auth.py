@@ -59,7 +59,7 @@ async def request_magic_link(payload: MagicLinkRequestIn) -> MagicLinkRequestOut
     return MagicLinkRequestOut(sent=True, dev_token=None)
 
 
-@router.post("/magic/verify", response_model=AuthOut)
+@router.post("/magic/verify", response_model=AuthOut, response_model_by_alias=True)
 async def verify_magic_link(
     payload: MagicLinkVerifyIn,
     db: Annotated[AsyncSession, Depends(get_db)],

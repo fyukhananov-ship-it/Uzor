@@ -73,7 +73,12 @@ def _serialize(
     )
 
 
-@router.post("/session", response_model=SessionOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/session",
+    response_model=SessionOut,
+    response_model_by_alias=True,  # отдаём camelCase для совместимости с TS-клиентом
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_session(
     payload: SessionCreateIn,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -129,7 +134,7 @@ async def create_session(
     )
 
 
-@router.get("/session/{token}", response_model=SessionOut)
+@router.get("/session/{token}", response_model=SessionOut, response_model_by_alias=True)
 async def get_session(
     token: uuid.UUID,
     db: Annotated[AsyncSession, Depends(get_db)],
